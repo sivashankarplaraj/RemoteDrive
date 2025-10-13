@@ -3,9 +3,9 @@
 ```mermaid
 sequenceDiagram
     autonumber
-    participant U as User (Web/CLI)
+    participant U as User - Web and CLI
     participant A as Django API
-    participant S3 as MinIO (S3)
+    participant S3 as MinIO S3
     participant DB as Metadata DB
 
     U->>A: POST /files/init-upload (filename, size, content-type)

@@ -5,15 +5,15 @@ flowchart LR
   Dev[Developer Workstation]
 
   subgraph Docker
-    MINIO[(MinIO Container)]
+    MINIO[(MinIO container)]
   end
 
   subgraph Local
-    DJ[django runserver]
-    DB[(SQLite file)]
+    DJ[Django runserver]
+    DB[(SQLite database)]
   end
 
-  Dev -->|Browser/CLI| DJ
+  Dev -->|Browser or CLI| DJ
   DJ -->|Presigned URL| MINIO
   DJ -->|ORM| DB
 ```

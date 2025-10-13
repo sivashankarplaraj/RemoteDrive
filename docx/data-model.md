@@ -20,7 +20,7 @@ erDiagram
         string filename
         string key_current
         string content_type
-        long size
+        bigint size
         string checksum
         datetime created_at
         datetime deleted_at
@@ -31,7 +31,7 @@ erDiagram
         uuid file_id FK
         int version
         string key
-        long size
+        bigint size
         string checksum
         datetime created_at
     }
@@ -42,7 +42,7 @@ erDiagram
         uuid owner_user_id FK
         string token
         datetime expires_at
-        string permissions // read|write
+        string permissions
         datetime created_at
     }
 ```
@@ -50,3 +50,4 @@ erDiagram
 Notes
 - For PoC, `USERS` can be simplified or replaced with a single tenant or API key table.
 - `key_current` tracks latest version object key for quick reads; versions keep history.
+- `permissions` field values: `read`, `write` (extend later for `readwrite`, `owner`).
