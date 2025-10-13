@@ -23,8 +23,8 @@ flowchart TB
   WUI -->|HTTP/JSON| API
   CLI -->|HTTP/JSON| API
 
-  API -->|Presigned URL (PUT/GET)| MINIO
-  API -->|Read/Write metadata| SQLite
+  API -->|Presigned URL: PUT, GET| MINIO
+  API -->|Read and write metadata| SQLite
 
   classDef svc fill:#eef,stroke:#446,stroke-width:1px;
   class API,Auth,MINIO,SQLite svc;
