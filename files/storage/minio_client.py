@@ -1,6 +1,7 @@
 import os
 from urllib.parse import urlparse
 from minio import Minio
+from minio.error import S3Error
 
 from django.conf import settings
 
@@ -27,3 +28,9 @@ def presign_put_url(key: str, expiry_seconds: int = 900) -> str:
 def presign_get_url(key: str, expiry_seconds: int = 900) -> str:
     client = get_minio_client()
     return client.presigned_get_object(settings.MINIO_BUCKET, key, expires=expiry_seconds)
+
+
+def stat_object(key: str):
+    """Return object stats or raise if missing."""
+    client = get_minio_client()
+    return client.stat_object(settings.MINIO_BUCKET, key)
