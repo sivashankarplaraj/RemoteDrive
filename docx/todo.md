@@ -4,9 +4,49 @@ Derived from the current docs (architecture-overview.md, sequence-upload.md, dat
 
 ## 0) Repo and environment bootstrap
 - [ ] Create Python virtualenv and pin dependencies (Django, djangorestframework, PyJWT, minio, ulid-py).
+	- [ ] python -m venv .venv
+	- [ ] Activate venv (PowerShell): .\.venv\Scripts\Activate.ps1
+	- [ ] Create requirements.txt with:
+		- Django
+		- djangorestframework
+		- PyJWT
+		- minio
+		- ulid-py
+	- [ ] pip install -r requirements.txt
 - [ ] Add settings module with env var config (MINIO_* creds/endpoint/bucket, JWT secret, DEBUG, DB URL).
+	- [ ] Create remotedrive/settings.py and settings_local.py (importing from base)
+	- [ ] Read env vars: MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET, JWT_SECRET, DATABASE_URL (optional)
+	- [ ] Provide .env.sample documenting required variables
 - [ ] Create a minimal Django project `remotedrive` and app `files`.
+	- [ ] django-admin startproject remotedrive .
+	- [ ] python manage.py startapp files
+	- [ ] Add 'rest_framework' and 'files' to INSTALLED_APPS
 - [ ] Configure SQLite DB for dev; prepare settings switch for Postgres later.
+	- [ ] Default to SQLite (db.sqlite3); if DATABASE_URL present, use Postgres
+	- [ ] Add dj-database-url (optional) for parsing DATABASE_URL later
+
+### Commands (PowerShell)
+```powershell
+# Create and activate venv
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# Create requirements.txt (example content)
+@'
+Django
+djangorestframework
+PyJWT
+minio
+ulid-py
+'@ | Set-Content -Encoding UTF8 requirements.txt
+
+# Install deps
+pip install -r requirements.txt
+
+# Scaffold Django project and app
+django-admin startproject remotedrive .
+python manage.py startapp files
+```
 
 ## 1) Data model and migrations
 - [ ] Implement models from data-model.md: USERS, FILES, FILE_VERSIONS, SHARES (simplify USERS for PoC if desired).
@@ -40,6 +80,50 @@ Derived from the current docs (architecture-overview.md, sequence-upload.md, dat
 - [ ] Add a Docker-based MinIO start script/docs for Windows PowerShell.
 - [ ] Add manage.py runserver instructions; set JWT secret via env.
 - [ ] Smoke test script or docs: init-upload -> PUT -> commit via curl or httpie.
+
+### MinIO (Docker) quick start (PowerShell)
+```powershell
+# Create a local data folder (optional)
+New-Item -ItemType Directory -Force -Path .\.data\minio | Out-Null
+
+# Run MinIO locally (adjust creds as needed)
+docker run -d --name minio -p 9000:9000 -p 9001:9001 \
+	-e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
+	-v ${PWD}\.data\minio:/data \
+	minio/minio server /data --console-address ":9001"
+
+# (Later) Create bucket using SDK or mc; for now, document MINIO_BUCKET env var
+```
+
+### Django runserver (PowerShell)
+```powershell
+$env:JWT_SECRET = "dev-secret-change-me"
+$env:MINIO_ENDPOINT = "http://localhost:9000"
+$env:MINIO_ACCESS_KEY = "minioadmin"
+$env:MINIO_SECRET_KEY = "minioadmin"
+$env:MINIO_BUCKET = "remotedrive"
+
+python manage.py migrate
+python manage.py runserver 127.0.0.1:8000
+```
+
+### Smoke test outline
+```powershell
+# 1) Init upload
+curl -X POST http://127.0.0.1:8000/files/init-upload \ 
+	-H "Authorization: Bearer <DEV_JWT>" \ 
+	-H "Content-Type: application/json" \ 
+	-d '{"filename":"notes.pdf","size":12345,"content_type":"application/pdf"}'
+
+# 2) PUT bytes to the returned presigned_put_url (server-side example using curl)
+curl -X PUT "<presigned_put_url>" --data-binary @"path\to\notes.pdf"
+
+# 3) Commit
+curl -X POST http://127.0.0.1:8000/files/commit \ 
+	-H "Authorization: Bearer <DEV_JWT>" \ 
+	-H "Content-Type: application/json" \ 
+	-d '{"key":"...","checksum":"sha256:...","size":12345}'
+```
 
 ## 7) Shares (read|write) [stretch]
 - [ ] Create/validate share tokens with optional expiry and permissions.
